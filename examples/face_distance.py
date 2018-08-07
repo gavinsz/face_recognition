@@ -11,8 +11,8 @@ import face_recognition
 # smaller distance are more similar to each other than ones with a larger distance.
 
 # Load some images to compare against
-known_obama_image = face_recognition.load_image_file("obama.jpg")
-known_biden_image = face_recognition.load_image_file("biden.jpg")
+known_obama_image = face_recognition.load_image_file("examples/obama.jpg")
+known_biden_image = face_recognition.load_image_file("examples/biden.jpg")
 
 # Get the face encodings for the known images
 obama_face_encoding = face_recognition.face_encodings(known_obama_image)[0]
@@ -24,7 +24,7 @@ known_encodings = [
 ]
 
 # Load a test image and get encondings for it
-image_to_test = face_recognition.load_image_file("obama2.jpg")
+image_to_test = face_recognition.load_image_file("examples/obama2.jpg")
 image_to_test_encoding = face_recognition.face_encodings(image_to_test)[0]
 
 # See how far apart the test image is from the known faces
