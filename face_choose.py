@@ -73,7 +73,7 @@ def get_image_encodings(star_name, files):
                     front_face_list.append(file)
             except Exception as err:
                 #print('open image failed|err=%s|file=%s'%(err, file))
-                logging.error('load image failed|file=%s'%(file))
+                logging.debug('load image failed|file=%s'%(file))
                 pass
 
     if have_check_img is False:
@@ -147,12 +147,6 @@ if __name__ == "__main__":
 
     files = get_signal_dir_files(path)
     unknown_face_encodings, image_to_check_encoding, face_img_list = get_image_encodings(files)
-    
-    '''
-    compare_result = face_recognition.compare_faces(unknown_face_encodings, 
-                                            image_to_check_encoding, 
-                                            tolerance=0.4)
-    '''
 
     compare_result = face_recognition.face_distance(unknown_face_encodings, image_to_check_encoding)
     similars = get_similar_images(face_img_list, compare_result)
