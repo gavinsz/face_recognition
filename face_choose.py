@@ -3,7 +3,13 @@ import face_recognition
 import os
 import shutil
 import argparse
+import logging
 
+logging.basicConfig(filename='logger.log', 
+                    format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s', 
+                    level = logging.INFO,
+                    filemode='a',
+                    datefmt='%Y-%m-%d %I:%M:%S %p')
 STEP = int(7)
 
 def get_star_name(path):
@@ -31,21 +37,31 @@ def get_signal_dir_files(path):
 
     return s
 
-def get_image_encodings(files):
+def get_image_encodings(star_name, files):
     unknown_face_encodings = []
     front_face_list =[]
+    have_check_img = False
+
     for file in files:
         #print('encoding file=', file)
         name = os.path.basename(file)
         if name == '1.jpg' or name == '1.jpeg':
-            image = face_recognition.load_image_file(file)
-            encodings = face_recognition.face_encodings(image)
+            have_check_img = True
+            try:
+                image = face_recognition.load_image_file(file)
+                encodings = face_recognition.face_encodings(image)
+            except Exception as err:
+                logging.error('load image failed|file=%s'%(file))
+                return None, None, None
+                    
             if len(encodings) == 1:
                 image_to_check_encoding = encodings[0]
                 unknown_face_encodings.append(image_to_check_encoding)
                 front_face_list.append(file)
             else:
-                print('image encoding failed|file=%s'%(file))
+                logging.error('image encoding failed|file=%s'%(file))
+                #print('image encoding failed|file=%s'%(file))
+                return None, None, None
         else:
             try:
                 image = face_recognition.load_image_file(file)
@@ -57,7 +73,13 @@ def get_image_encodings(files):
                     front_face_list.append(file)
             except Exception as err:
                 #print('open image failed|err=%s|file=%s'%(err, file))
+                logging.error('load image failed|file=%s'%(file))
                 pass
+
+    if have_check_img is False:
+        #print(star_name, 'donot have 1.jpg or 1.jpeg')
+        logging.error(star_name, 'donot have 1.jpg or 1.jpeg')
+        return None, None, None
 
     return unknown_face_encodings, image_to_check_encoding, front_face_list
 
@@ -102,7 +124,9 @@ def process_choose_image(src_path, out_path, step_start=0):
         if not star_image_is_choosed(star_name, out_path):
             #print('star_dir=', star_dir)
             files = get_signal_dir_files(star_dir) 
-            unknown_face_encodings, image_to_check_encoding, face_img_list = get_image_encodings(files)
+            unknown_face_encodings, image_to_check_encoding, face_img_list = get_image_encodings(star_name, files)
+            if image_to_check_encoding is None:
+                continue
             compare_result = face_recognition.face_distance(unknown_face_encodings, image_to_check_encoding)
             similars = get_similar_images(face_img_list, compare_result)
             copy_choosed_image(similars, star_name, out_path)
@@ -110,7 +134,7 @@ def process_choose_image(src_path, out_path, step_start=0):
         print('choosing... %d/%d' %(i, len(dirs)), end='\r')
 
 if __name__ == "__main__":
-    src_path = 'E:/workspace/ai/google-images-download-master/downloads/stars-top1000-part1'
+    src_path = 'E:/workspace/ai/google-images-download-master/downloads/stars-top1000-part2'
     out_path = 'F:\\star-top1000-imgs'
 
     parser = argparse.ArgumentParser()
