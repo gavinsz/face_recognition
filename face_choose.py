@@ -4,6 +4,8 @@ import os
 import shutil
 import argparse
 import logging
+import multiprocessing as mp
+import math
 
 logging.basicConfig(filename='logger.log', 
                     format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s', 
@@ -78,7 +80,7 @@ def get_image_encodings(star_name, files):
 
     if have_check_img is False:
         #print(star_name, 'donot have 1.jpg or 1.jpeg')
-        logging.error(star_name, 'donot have 1.jpg or 1.jpeg')
+        logging.error('%s donot have 1.jpg or 1.jpeg'%(star_name))
         return None, None, None
 
     return unknown_face_encodings, image_to_check_encoding, front_face_list
@@ -114,12 +116,13 @@ def star_image_is_choosed(star_name, dst_path):
     else:
         return True
 
-def process_choose_image(src_path, out_path, step_start=0):
-    dirs = get_all_dirs(src_path)
-    count = 0;
-    #for i, star_dir in enumerate(dirs, step_start):
-    for i in range(step_start, len(dirs), STEP):
-        star_dir = dirs[i]
+def chunks(arr, m):
+    n = int(math.ceil(len(arr) / float(m)))
+    return [arr[i:i + n] for i in range(0, len(arr), n)]
+
+def process_choose_image(dirs, out_path):
+    
+    for i, star_dir in enumerate(dirs):
         star_name = get_star_name(star_dir)
         if not star_image_is_choosed(star_name, out_path):
             #print('star_dir=', star_dir)
@@ -137,11 +140,25 @@ if __name__ == "__main__":
     src_path = 'E:/workspace/ai/google-images-download-master/downloads/stars-top1000-part2'
     out_path = 'F:\\star-top1000-imgs'
 
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--progress_id', action="store", help="1....n", default=1, type=int)
     args = parser.parse_args()
+    '''
+    #max process number
+    process_num = 7
+
+    pool = mp.Pool(process_num)
+    dirs = get_all_dirs(src_path)
+    dirs_chunks = chunks(dirs, process_num)
+    for chunk in dirs_chunks:
+        #print('len(chunk)=', len(chunk))
+        pool.apply_async(process_choose_image, (chunk, out_path,))
     
-    process_choose_image(src_path, out_path, args.progress_id)
+    pool.close()
+    pool.join()
+
+    #process_choose_image(dirs, out_path, args.progress_id)
     print('choose images completed')
     exit(0)
 
