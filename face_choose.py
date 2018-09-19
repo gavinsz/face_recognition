@@ -75,7 +75,7 @@ def get_image_encodings(star_name, files):
                     front_face_list.append(file)
             except Exception as err:
                 #print('open image failed|err=%s|file=%s'%(err, file))
-                logging.debug('load image failed|file=%s'%(file))
+                logging.error('load image failed|file=%s'%(file))
                 pass
 
     if have_check_img is False:
@@ -140,11 +140,6 @@ if __name__ == "__main__":
     src_path = 'E:/workspace/ai/google-images-download-master/downloads/stars-top1000-part2'
     out_path = 'F:\\star-top1000-imgs'
 
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--progress_id', action="store", help="1....n", default=1, type=int)
-    args = parser.parse_args()
-    '''
     #max process number
     process_num = 7
 
@@ -158,33 +153,5 @@ if __name__ == "__main__":
     pool.close()
     pool.join()
 
-    #process_choose_image(dirs, out_path, args.progress_id)
     print('choose images completed')
-    exit(0)
-
-    files = get_signal_dir_files(path)
-    unknown_face_encodings, image_to_check_encoding, face_img_list = get_image_encodings(files)
-
-    compare_result = face_recognition.face_distance(unknown_face_encodings, image_to_check_encoding)
-    similars = get_similar_images(face_img_list, compare_result)
-
-    copy_choosed_image(similars, )
-
-    out_dir = 'output/'
-    similars = sorted(similars.items(), key=lambda d: d[1])
-    #print('similars=', similars)
-
-    for  i, item in enumerate(similars):
-        if i < 10:
-            key = item[0]
-            name = os.path.basename(key)
-            shutil.copy(key, out_dir + name)
-            print(item[0], item[1])
-    
-    '''
-    for k, v in  similars.items():
-        name = os.path.basename(k)
-        shutil.copy(k, out_dir + name)
-        print(name, 'similar rate=', v)
-    '''
 
