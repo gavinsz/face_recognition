@@ -9,7 +9,7 @@ import math
 
 logging.basicConfig(filename='logger.log', 
                     format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s', 
-                    level = logging.INFO,
+                    level = logging.DEBUG,
                     filemode='a',
                     datefmt='%Y-%m-%d %I:%M:%S %p')
 STEP = int(7)
@@ -96,11 +96,13 @@ def get_similar_images(files, result):
 
 def copy_choosed_image(similars, star_name, dst_path):
     out_dir = os.path.join(dst_path, star_name)
+    #print('dst_path=', dst_path, 'out_dir=', out_dir)
+
     if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
+        os.makedirs(out_dir, exist_ok=True)
 
     similars = sorted(similars.items(), key=lambda d: d[1])
-    #print('similars=', similars)
+    #print('copy_choosed_image similars=', similars)
 
     for  i, item in enumerate(similars):
         if i < 10 and item[1] < 0.6:
@@ -129,20 +131,29 @@ def process_choose_image(dirs, out_path):
             files = get_signal_dir_files(star_dir) 
             unknown_face_encodings, image_to_check_encoding, face_img_list = get_image_encodings(star_name, files)
             if image_to_check_encoding is None:
+                #print('continue')
                 continue
             compare_result = face_recognition.face_distance(unknown_face_encodings, image_to_check_encoding)
+            #print('compare_result=', compare_result)
             similars = get_similar_images(face_img_list, compare_result)
+            #print('similars=', similars)
             copy_choosed_image(similars, star_name, out_path)
 
         print('choosing... %d/%d' %(i, len(dirs)), end='\r')
 
 if __name__ == "__main__":
-    src_path = 'E:/workspace/ai/google-images-download-master/downloads/stars-top1000-part2'
-    out_path = 'F:\\star-top1000-imgs'
+    src_path = 'E:/workspace/ai/google-images-download-master/cpc_images'
+    out_path = 'F:\\cpc_images'
 
+    '''
+    #单进程挑选图片
+    dirs = get_all_dirs(src_path)
+    process_choose_image(dirs, out_path)
+    '''
+
+    #多进程挑选图片
     #max process number
     process_num = 7
-
     pool = mp.Pool(process_num)
     dirs = get_all_dirs(src_path)
     dirs_chunks = chunks(dirs, process_num)
